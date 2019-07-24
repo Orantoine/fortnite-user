@@ -37,4 +37,10 @@ public class UserController {
         return "Deleted";
     }
 
+    @GetMapping(value = "/user/forget")
+    public User forgetPassword(@RequestParam String email){
+        User user = userRepository.findByEmail(email);
+        return  user;
+    }
+
 }

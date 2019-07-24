@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.Orantoine.fortniteuser.classes.MailHelper;
 import fr.Orantoine.fortniteuser.exceptions.UserNotFoundException;
 import fr.Orantoine.fortniteuser.models.Response;
+import fr.Orantoine.fortniteuser.models.Session;
 import fr.Orantoine.fortniteuser.models.User;
+import fr.Orantoine.fortniteuser.repositories.SessionRepository;
 import fr.Orantoine.fortniteuser.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +17,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.mail.MessagingException;
 import java.io.IOException;
 import java.net.URI;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 public class UserController {
@@ -26,6 +32,9 @@ public class UserController {
 
     @Autowired
     private MailHelper mailHelper;
+
+    @Autowired
+    private SessionRepository sessionRepository;
 
     @GetMapping(value = "/health")
     public String HealthCheck(){
@@ -78,6 +87,14 @@ public class UserController {
             if(user.getPassword().equals(password)){
                 response.setCode(200);
                 response.setMessage("Vous êtes correctement idéntifié");
+                Session session = new Session();
+                session.setUser(user.getId());
+                Date date = new Date();
+                Timestamp ts=new Timestamp(date.getTime());
+                session.setExpiration(ts);
+                session.setToken(UUID.randomUUID().toString());
+
+                sessionRepository.save(session);
             }
         }
         else{

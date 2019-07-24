@@ -63,7 +63,7 @@ public class UserController {
             }
         }
         else{
-            response.setCode(400);
+            response.setCode(500);
             response.setMessage("Identifiant inconnus");
         }
 

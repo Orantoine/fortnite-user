@@ -24,6 +24,9 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private MailHelper mailHelper;
+
     @GetMapping(value = "/health")
     public String HealthCheck(){
         return "OK";
@@ -60,19 +63,18 @@ public class UserController {
     @GetMapping(value = "/user/forget")
     public User forgetPassword(@RequestParam String email){
         User user = userRepository.findByEmail(email);
-        MailHelper mailHelper = new MailHelper();
         mailHelper.sendEmail(user.getEmail());
         return user;
     }
 
     @GetMapping(value = "/login")
-    public String login(@RequestParam(required =true) String pseudo, @RequestParam(required = true) String password){
+    public String login(@RequestHeader(required =true) String pseudo, @RequestHeader(required = true) String password){
         Response response = new Response();
         User user = userRepository.findByPseudo(pseudo);
         if(user == null ){
             user = userRepository.findByEmail(pseudo);
         }
-        if(user == null) {
+        if(user != null) {
             if(user.getPassword().equals(password)){
                 response.setCode(200);
                 response.setMessage("Vous êtes correctement idéntifié");

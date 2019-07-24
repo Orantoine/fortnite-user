@@ -13,9 +13,10 @@ public class User {
 
     @Id
     private String id;
+    @UniqueElements
     private String pseudo;
-    @JsonIgnore
     private String password;
+    @UniqueElements
     private String email;
     private String platerform;
 

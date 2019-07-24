@@ -10,6 +10,7 @@ import fr.Orantoine.fortniteuser.models.User;
 import fr.Orantoine.fortniteuser.repositories.SessionRepository;
 import fr.Orantoine.fortniteuser.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -43,8 +44,9 @@ public class UserController {
 
 
     @GetMapping(value = "/users")
-    public List<User> getUsers(){
-        return userRepository.findAll();
+    public ResponseEntity<List<User>> getUsers(){
+        List<User> users = userRepository.findAll();
+        return ResponseEntity.status(200).body(users);
     }
 
     @PostMapping(value = "/user")
@@ -57,27 +59,30 @@ public class UserController {
     }
 
     @GetMapping(value = "/user/{id}")
-    public Optional<User> findUser(@PathVariable String id){
+    public ResponseEntity<User> findUser(@PathVariable String id){
         Optional<User> user = userRepository.findById(id);
         if (!user.isPresent()) throw new UserNotFoundException("L'utilisateur avec l'id "+ id + "est introuvable.");
 
-        return user;
+        return ResponseEntity.status(200).body(user.get());
     }
 
     @DeleteMapping(value = "/user/{id}")
-    public String deleteUser(@PathVariable String id){
+    public ResponseEntity<Void> deleteUser(@PathVariable String id){
         userRepository.deleteById(id);
-        return "Deleted";
+        return ResponseEntity.status(200).build();
     }
     @GetMapping(value = "/user/forget")
-    public User forgetPassword(@RequestParam String email){
+    public ResponseEntity<Void> forgetPassword(@RequestParam String email){
         User user = userRepository.findByEmail(email);
-        mailHelper.sendEmail(user.getEmail());
-        return user;
+        boolean success = mailHelper.sendEmail(user.getEmail());
+        if(success){
+            return ResponseEntity.status(200).build();
+        }
+        return ResponseEntity.status(500).build();
     }
 
     @GetMapping(value = "/login")
-    public String login(@RequestHeader(required =true) String pseudo, @RequestHeader(required = true) String password){
+    public ResponseEntity<Void> login(@RequestHeader(required =true) String pseudo, @RequestHeader(required = true) String password){
         Response response = new Response();
         User user = userRepository.findByPseudo(pseudo);
         if(user == null ){
@@ -93,22 +98,12 @@ public class UserController {
                 Timestamp ts=new Timestamp(date.getTime());
                 session.setExpiration(ts);
                 session.setToken(UUID.randomUUID().toString());
-
                 sessionRepository.save(session);
+                HttpHeaders httpHeaders = new HttpHeaders();
+                httpHeaders.add("token",session.getToken());
+                return ResponseEntity.status(200).headers(httpHeaders).build();
             }
         }
-        else{
-            response.setCode(500);
-            response.setMessage("Identifiant inconnus");
-        }
-
-        ObjectMapper obj = new ObjectMapper();
-        try{
-            String jsonStr = obj.writeValueAsString(response);
-            return jsonStr;
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        return null;
+        return ResponseEntity.status(404).build();
     }
 }

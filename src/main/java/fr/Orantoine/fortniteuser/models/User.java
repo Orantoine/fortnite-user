@@ -1,6 +1,7 @@
 package fr.Orantoine.fortniteuser.models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.UniqueElements;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -13,8 +14,8 @@ public class User {
     @Id
     private String id;
     private String pseudo;
+    @JsonIgnore
     private String password;
-    @Email
     private String email;
     private String platerform;
 
@@ -53,6 +54,7 @@ public class User {
         this.password = password;
     }
 
+    @Email
     public String getEmail() {
         return email;
     }
